@@ -234,5 +234,41 @@ namespace TeaUnitTests
                 Assert.Throws<ArgumentException>(() => { modelReg.Validate(); }).Message
             );
         }
+
+        [Fact]
+        public void TestEmptyDictionaryStringString()
+        {
+            // Test case for fixing System.ArgumentException when returning empty dictionary {} with Dictionary<string, string> type
+            Dictionary<string, object> dic = new Dictionary<string, object>();
+            
+            // Add an empty Dictionary<string, string>
+            Dictionary<string, string> emptyStringDict = new Dictionary<string, string>();
+            dic.Add("stringDict", emptyStringDict);
+            
+            // Add an empty Dictionary<string, object>
+            Dictionary<string, object> emptyObjectDict = new Dictionary<string, object>();
+            dic.Add("objectDict", emptyObjectDict);
+            
+            // This should not throw ArgumentException
+            var model = TeaModel.ToObject<TestDicStringModel>(dic);
+            Assert.NotNull(model);
+            
+            // Test ToMap with empty dictionary
+            TestRegModel testModel = new TestRegModel();
+            testModel.RequestId = "test";
+            testModel.Items = new List<TestRegSubModel> { new TestRegSubModel { RequestId = "sub" } };
+            testModel.NextMarker = "next";
+            testModel.dict = new Dictionary<string, object>();
+            
+            var resultMap = testModel.ToMap();
+            Assert.NotNull(resultMap);
+            Assert.NotNull(resultMap["dict"]);
+            
+            // Convert back and verify
+            var convertedModel = TeaModel.ToObject<TestRegModel>(resultMap);
+            Assert.NotNull(convertedModel);
+            Assert.NotNull(convertedModel.dict);
+            Assert.Empty(convertedModel.dict);
+        }
     }
 }
