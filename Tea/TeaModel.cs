@@ -99,19 +99,19 @@ namespace Tea
             else if (typeof(IDictionary).IsAssignableFrom(propertyType))
             {
                 var dic = (IDictionary) value;
-                if (dic.Count == 0)
+    
+                if (propertyType.Equals(typeof(IDictionary)))
                 {
                     return dic;
                 }
-                IDictionary resultDic;
-                if (propertyType.Equals(typeof(IDictionary)))
+                
+                IDictionary resultDic = (IDictionary)Activator.CreateInstance(propertyType);
+                
+                Type[] genericArgs = propertyType.GetGenericArguments();
+    
+                if (genericArgs.Length >= 2)
                 {
-                    resultDic = dic;
-                }
-                else
-                {
-                    resultDic = (IDictionary) System.Activator.CreateInstance(propertyType);
-                    var innerType = propertyType.GetGenericArguments() [1];
+                    Type targetValueType = genericArgs[1];
                     foreach (DictionaryEntry keypair in dic)
                     {
                         if (keypair.Value == null)
@@ -120,9 +120,15 @@ namespace Tea
                         }
                         else
                         {
-                            Type valueType = keypair.Value.GetType();
-                            resultDic.Add(keypair.Key, MapObj(innerType, keypair.Value));
+                            resultDic.Add(keypair.Key, MapObj(targetValueType, keypair.Value));
                         }
+                    }
+                }
+                else
+                {
+                    foreach (DictionaryEntry keypair in dic)
+                    {
+                        resultDic.Add(keypair.Key, keypair.Value);
                     }
                 }
 
